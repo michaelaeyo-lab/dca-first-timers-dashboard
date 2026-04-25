@@ -1,0 +1,164 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ user.full_name }} — DCA Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+  <div>
+    <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+    <p>{{ user.email }} &middot; {{ user.phone or 'No phone' }} &middot; Registered {{ user.created_at.strftime('%b %d, %Y at %I:%M %p') if user.created_at else 'N/A' }}</p>
+  </div>
+  <a href="{{ url_for('admin_users') }}" class="btn-sm btn-sm-outline">&larr; Back to Users</a>
+</div>
+
+<!-- Overview -->
+<div class="stats-grid" style="margin-bottom:24px">
+  {% set completed_count = progress.values()|selectattr('is_completed')|list|length %}
+  <div class="stat-card">
+    <div class="stat-card-label">Days Completed</div>
+    <div class="stat-card-value">{{ completed_count }} <span>/ 7</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Progress</div>
+    <div class="stat-card-value">{{ (completed_count / 7 * 100)|round|int }}<span>%</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Assessment</div>
+    <div class="stat-card-value" style="font-size:1.2rem">
+      {% if assessment %}
+        <span class="badge badge-success" style="font-size:0.85rem">Complete</span>
+      {% else %}
+        <span class="badge badge-muted" style="font-size:0.85rem">Pending</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Last Login</div>
+    <div class="stat-card-value" style="font-size:0.95rem">
+      {{ user.last_login.strftime('%b %d, %I:%M %p') if user.last_login else 'Never' }}
+    </div>
+  </div>
+</div>
+
+<!-- Day-by-Day Responses -->
+<div class="detail-card">
+  <h3>Day-by-Day Responses</h3>
+
+  {% for day in days_data %}
+    {% set dp = progress.get(day.day) %}
+    <div class="day-section {{ 'open' if dp and dp.is_completed else '' }}" onclick="this.classList.toggle('open')">
+      <div class="day-section-header">
+        <h4>
+          Day {{ day.day }}: {{ day.title }}
+          {% if dp and dp.is_completed %}
+            <span class="badge badge-success" style="margin-left:8px">Complete</span>
+          {% elif dp %}
+            <span class="badge badge-warning" style="margin-left:8px">In Progress</span>
+          {% else %}
+            <span class="badge badge-muted" style="margin-left:8px">Not Started</span>
+          {% endif %}
+        </h4>
+        <span class="day-section-toggle">&#9660;</span>
+      </div>
+      <div class="day-section-body" onclick="event.stopPropagation()">
+        {% if dp %}
+          <div class="detail-row">
+            <div class="detail-label">Started</div>
+            <div class="detail-value">{{ dp.started_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.started_at else 'N/A' }}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Completed</div>
+            <div class="detail-value">{{ dp.completed_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.completed_at else 'Not yet' }}</div>
+          </div>
+
+          {% set answers = dp.answers or {} %}
+          {% for q in day.questions %}
+          <div class="detail-row">
+            <div class="detail-label">Q{{ loop.index }}: {{ q }}</div>
+            <div class="detail-value">{{ answers.get(loop.index0|string, '—') or '—' }}</div>
+          </div>
+          {% endfor %}
+
+          <div class="detail-row">
+            <div class="detail-label">Personal Notes</div>
+            <div class="detail-value">{{ dp.notes or '—' }}</div>
+          </div>
+
+          {% set checklist = dp.checklist or {} %}
+          <div class="detail-row">
+            <div class="detail-label">Checklist</div>
+            <div class="detail-value">
+              {% for item in day.checklist %}
+                {% if checklist.get(loop.index0|string) %}
+                  <span class="badge badge-success" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
+                {% else %}
+                  <span class="badge badge-muted" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <p style="color:var(--ink-soft);font-size:0.88rem;padding:8px 0">This day has not been started yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Assessment Responses -->
+{% if assessment %}
+<div class="detail-card">
+  <h3>Final Assessment — {{ assessment.completed_at.strftime('%b %d, %Y at %I:%M %p') if assessment.completed_at else '' }}</h3>
+  {% for q in assessment_questions %}
+    <div class="detail-row">
+      <div class="detail-label">{{ q }}</div>
+      <div class="detail-value">{{ (assessment.responses or {}).get(loop.index0|string, '—') or '—' }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Activity Timeline -->
+<div class="detail-card">
+  <h3>Activity Timeline (Last 100 actions)</h3>
+  {% if activities %}
+  <div class="timeline">
+    {% for act in activities %}
+    <div class="timeline-item">
+      <div class="timeline-dot" style="
+        {% if act.action_type == 'signup' %}background:#C9A84C{% endif %}
+        {% if act.action_type == 'login' %}background:#7B48A6{% endif %}
+        {% if act.action_type == 'day_started' %}background:#1565C0{% endif %}
+        {% if act.action_type == 'card_answered' %}background:#4A3B5C{% endif %}
+        {% if act.action_type == 'day_completed' %}background:#2E7D5B{% endif %}
+        {% if act.action_type == 'assessment_completed' %}background:#C9A84C{% endif %}
+      "></div>
+      <div class="timeline-content">
+        <div class="timeline-action">
+          {% if act.action_type == 'signup' %}
+            <strong>Registered</strong> for the 7-day journey
+          {% elif act.action_type == 'login' %}
+            <strong>Logged in</strong>
+          {% elif act.action_type == 'day_started' %}
+            <strong>Started Day {{ act.day_number }}</strong>
+          {% elif act.action_type == 'card_answered' %}
+            Answered <strong>{{ act.card_name or 'a card' }}</strong> on Day {{ act.day_number }}
+          {% elif act.action_type == 'day_completed' %}
+            <strong>Completed Day {{ act.day_number }}</strong>
+          {% elif act.action_type == 'assessment_started' %}
+            <strong>Started Final Assessment</strong>
+          {% elif act.action_type == 'assessment_completed' %}
+            <strong>Completed Final Assessment</strong>
+          {% else %}
+            {{ act.action_type }}
+          {% endif %}
+        </div>
+        <div class="timeline-time">{{ act.timestamp.strftime('%b %d, %Y at %I:%M:%S %p') if act.timestamp else '' }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--ink-soft);font-size:0.88rem;padding:16px 0">No activity recorded yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

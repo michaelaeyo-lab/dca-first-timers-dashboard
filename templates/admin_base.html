@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Admin — DCA{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --royal: #3D1259;
+  --royal-mid: #5C2D82;
+  --royal-light: #7B48A6;
+  --gold: #C9A84C;
+  --gold-light: #E4CC7A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --cream: #FDF6EC;
+  --cream-dark: #F5EBDA;
+  --ink: #1A0A2E;
+  --ink-soft: #4A3B5C;
+  --white: #FFFFFF;
+  --success: #2E7D5B;
+  --success-light: #E8F5EE;
+  --error: #C62828;
+  --error-light: #FFEBEE;
+  --sidebar-w: 240px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 2px 12px rgba(61,18,89,0.06);
+  --shadow-lift: 0 8px 30px rgba(61,18,89,0.1);
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: #F4F0EB;
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Flash messages */
+.flash-container {
+  position: fixed; top: 16px; right: 16px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 380px;
+}
+.flash-msg {
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  font-size: 0.85rem; animation: flashIn 0.3s ease-out;
+}
+.flash-msg.success { background: var(--success-light); color: var(--success); border: 1px solid rgba(46,125,91,0.2); }
+.flash-msg.error { background: var(--error-light); color: var(--error); border: 1px solid rgba(198,40,40,0.2); }
+.flash-msg.info { background: #E3F2FD; color: #1565C0; border: 1px solid rgba(21,101,192,0.2); }
+.flash-close { position: absolute; top: 8px; right: 8px; background: none; border: none; cursor: pointer; color: inherit; opacity: 0.5; }
+
+@keyframes flashIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--royal);
+  padding: 24px 0;
+  display: flex; flex-direction: column;
+  z-index: 50;
+  transition: transform 0.3s;
+}
+
+.sidebar-brand {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 16px;
+}
+
+.sidebar-brand h2 {
+  font-size: 0.95rem; font-weight: 600; color: var(--white);
+  margin-bottom: 2px;
+}
+
+.sidebar-brand span {
+  font-size: 0.7rem; font-weight: 400;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
+
+.sidebar-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.55);
+  text-decoration: none; font-size: 0.88rem; font-weight: 400;
+  transition: all 0.2s;
+}
+
+.sidebar-link:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); text-decoration: none; }
+.sidebar-link.active { background: rgba(255,255,255,0.1); color: var(--white); font-weight: 500; }
+.sidebar-link svg { flex-shrink: 0; opacity: 0.6; }
+.sidebar-link.active svg { opacity: 1; }
+
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: auto;
+}
+
+.sidebar-footer a {
+  display: flex; align-items: center; gap: 8px;
+  color: rgba(255,255,255,0.35); font-size: 0.8rem;
+  text-decoration: none; transition: color 0.2s;
+}
+
+.sidebar-footer a:hover { color: rgba(255,255,255,0.7); text-decoration: none; }
+
+/* Main content */
+.main {
+  margin-left: var(--sidebar-w);
+  padding: 32px 32px 48px;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-header h1 { font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+.page-header p { font-size: 0.85rem; color: var(--ink-soft); font-weight: 300; margin-top: 2px; }
+
+/* Stat cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow-soft);
+}
+
+.stat-card-label {
+  font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ink-soft); margin-bottom: 8px;
+}
+
+.stat-card-value { font-size: 2rem; font-weight: 700; color: var(--royal); }
+.stat-card-value span { font-size: 0.9rem; font-weight: 400; color: var(--ink-soft); }
+
+/* Table */
+.table-card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow-soft); overflow: hidden;
+}
+
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.table-header h3 { font-size: 1rem; font-weight: 600; }
+
+.search-input {
+  padding: 8px 14px; border: 1px solid rgba(0,0,0,0.1);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem; outline: none; width: 240px;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus { border-color: var(--gold); }
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  text-align: left; padding: 12px 20px;
+  font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-soft); background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+td {
+  padding: 14px 20px; font-size: 0.88rem;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  color: var(--ink);
+}
+
+tr:hover td { background: rgba(0,0,0,0.01); }
+
+.badge {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 20px; font-size: 0.72rem;
+  font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-success { background: var(--success-light); color: var(--success); }
+.badge-warning { background: var(--gold-dim); color: #8B6914; }
+.badge-muted { background: var(--cream-dark); color: var(--ink-soft); }
+
+.btn-sm {
+  display: inline-block; padding: 6px 14px;
+  border-radius: var(--radius-sm); font-size: 0.8rem;
+  font-weight: 500; text-decoration: none;
+  transition: all 0.2s; border: none; cursor: pointer;
+}
+
+.btn-sm-primary { background: var(--royal); color: var(--white); }
+.btn-sm-primary:hover { background: var(--royal-mid); text-decoration: none; }
+.btn-sm-outline { background: transparent; border: 1px solid rgba(0,0,0,0.12); color: var(--ink-soft); }
+.btn-sm-outline:hover { border-color: var(--royal); color: var(--royal); text-decoration: none; }
+
+/* Progress bar mini */
+.progress-mini {
+  width: 80px; height: 6px; background: var(--cream-dark);
+  border-radius: 3px; overflow: hidden;
+}
+
+.progress-mini-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--royal-light));
+  transition: width 0.3s;
+}
+
+/* Detail cards */
+.detail-card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow-soft); padding: 24px;
+  margin-bottom: 20px;
+}
+
+.detail-card h3 {
+  font-size: 1rem; font-weight: 600; margin-bottom: 16px;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.detail-row {
+  display: flex; gap: 12px; margin-bottom: 12px;
+}
+
+.detail-label {
+  font-size: 0.75rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-soft); min-width: 120px;
+}
+
+.detail-value { font-size: 0.9rem; color: var(--ink); line-height: 1.5; }
+
+.timeline { display: flex; flex-direction: column; gap: 0; }
+
+.timeline-item {
+  display: flex; gap: 16px; padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.timeline-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold); margin-top: 6px; flex-shrink: 0;
+}
+
+.timeline-content { flex: 1; }
+.timeline-action { font-size: 0.88rem; font-weight: 400; color: var(--ink); }
+.timeline-time { font-size: 0.75rem; color: var(--ink-soft); margin-top: 2px; }
+
+/* Day progress section */
+.day-section {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px; overflow: hidden;
+}
+
+.day-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: rgba(0,0,0,0.02);
+  cursor: pointer; user-select: none;
+}
+
+.day-section-header h4 { font-size: 0.9rem; font-weight: 500; }
+
+.day-section-body { padding: 16px 18px; display: none; }
+.day-section.open .day-section-body { display: block; }
+
+.day-section-toggle { font-size: 0.8rem; color: var(--ink-soft); transition: transform 0.2s; }
+.day-section.open .day-section-toggle { transform: rotate(180deg); }
+
+/* Mobile sidebar toggle */
+.mobile-toggle {
+  display: none; position: fixed; top: 12px; left: 12px;
+  z-index: 60; background: var(--royal); border: none;
+  width: 40px; height: 40px; border-radius: 8px;
+  color: var(--white); cursor: pointer;
+  align-items: center; justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 20px 16px; padding-top: 60px; }
+  .mobile-toggle { display: flex; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .search-input { width: 160px; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+{% block admin_extra_css %}{% endblock %}
+</style>
+</head>
+<body>
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+</button>
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <h2>DCA Admin</h2>
+    <span>First Timers Tracker</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="2" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="10" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="10" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+      Overview
+    </a>
+    <a href="{{ url_for('admin_users') }}" class="sidebar-link {% if request.endpoint in ['admin_users', 'admin_user_detail'] %}active{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Users
+    </a>
+    <a href="{{ url_for('admin_export') }}" class="sidebar-link">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v10M5 8l4 4 4-4M3 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Export CSV
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="{{ url_for('logout') }}">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sign Out
+    </a>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash-msg {{ category }}" style="position:relative">
+      {{ message }}
+      <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  <script>setTimeout(()=>{document.querySelectorAll('.flash-msg').forEach(m=>m.remove())},5000);</script>
+  {% endif %}
+{% endwith %}
+
+<div class="main">
+  {% block admin_content %}{% endblock %}
+</div>
+
+{% block admin_scripts %}{% endblock %}
+</body>
+</html>

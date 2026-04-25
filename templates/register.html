@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Welcome — Dominion Covenant Assembly{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--royal);
+  padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-screen::before {
+  content: '';
+  position: absolute;
+  top: -30%; right: -20%;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-screen::after {
+  content: '';
+  position: absolute;
+  bottom: -20%; left: -15%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(92,45,130,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.welcome-cross {
+  width: 48px; height: 48px;
+  margin-bottom: 28px;
+  opacity: 0.7;
+  animation: fadeDown 1s ease-out;
+}
+
+.welcome-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 300;
+  color: var(--white);
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  animation: fadeDown 1s ease-out 0.1s both;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-title strong {
+  font-weight: 600;
+  color: var(--gold-light);
+  display: block;
+  font-size: 1.15em;
+}
+
+.welcome-subtitle {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  margin-bottom: 36px;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  animation: fadeDown 1s ease-out 0.25s both;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-divider {
+  width: 48px; height: 1px;
+  background: var(--gold);
+  margin-bottom: 32px;
+  animation: fadeDown 1s ease-out 0.3s both;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 1s ease-out 0.4s both;
+}
+
+.form-row { display: flex; gap: 12px; }
+.form-row .input-group { flex: 1; }
+
+.welcome-form .input-group label { color: rgba(255,255,255,0.45); }
+
+.welcome-form .input-group input {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: var(--white);
+}
+
+.welcome-form .input-group input::placeholder { color: rgba(255,255,255,0.25); }
+
+.welcome-form .input-group input:focus {
+  border-color: var(--gold);
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+
+.auth-link {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.4);
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-link a { color: var(--gold-light); }
+
+@media (max-width: 480px) {
+  .form-row { flex-direction: column; gap: 16px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-screen">
+  <div class="welcome-cross">
+    <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+      <path d="M24 4v40M12 16h24" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/>
+    </svg>
+  </div>
+  <h1 class="welcome-title">Welcome to<br><strong>Dominion Covenant Assembly</strong></h1>
+  <p class="welcome-subtitle">Your journey to Christian growth begins here</p>
+  <div class="welcome-divider"></div>
+
+  <form class="welcome-form" method="POST" action="{{ url_for('register') }}">
+    <div class="form-row">
+      <div class="input-group">
+        <label>First Name</label>
+        <input type="text" name="first_name" placeholder="John" required>
+      </div>
+      <div class="input-group">
+        <label>Last Name</label>
+        <input type="text" name="last_name" placeholder="Doe" required>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Email Address</label>
+      <input type="email" name="email" placeholder="john@example.com" required>
+    </div>
+    <div class="input-group">
+      <label>Phone Number</label>
+      <input type="tel" name="phone" placeholder="+234 800 000 0000">
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Min 6 characters" required minlength="6">
+      </div>
+      <div class="input-group">
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password" placeholder="Repeat password" required minlength="6">
+      </div>
+    </div>
+    <button type="submit" class="btn-primary" style="margin-top:8px;">Begin Your 7-Day Journey</button>
+  </form>
+  <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+</div>
+{% endblock %}

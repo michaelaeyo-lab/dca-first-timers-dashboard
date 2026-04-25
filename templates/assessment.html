@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Final Assessment — DCA{% endblock %}
+
+{% block extra_css %}
+<style>
+.assess-screen {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--royal);
+  padding: 40px 20px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+
+.assess-badge {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--gold) 0%, #B8923E 100%);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  box-shadow: 0 0 60px rgba(201,168,76,0.3);
+  animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.assess-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 400; color: var(--white);
+  margin-bottom: 12px;
+  animation: fadeUp 0.6s ease-out 0.2s both;
+}
+
+.assess-subtitle {
+  font-size: 1rem; color: rgba(255,255,255,0.5);
+  font-weight: 300; margin-bottom: 40px;
+  max-width: 400px; line-height: 1.6;
+  animation: fadeUp 0.6s ease-out 0.3s both;
+}
+
+.assess-questions {
+  width: 100%; max-width: 500px;
+  display: flex; flex-direction: column; gap: 16px;
+  animation: fadeUp 0.6s ease-out 0.4s both;
+}
+
+.assess-q {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius); padding: 20px;
+  text-align: left;
+}
+
+.assess-q-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; color: var(--white);
+  margin-bottom: 12px; font-style: italic;
+}
+
+.assess-textarea {
+  width: 100%; min-height: 80px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem; font-weight: 300;
+  color: var(--white);
+  resize: vertical; outline: none;
+  transition: all 0.3s;
+}
+
+.assess-textarea::placeholder { color: rgba(255,255,255,0.2); }
+.assess-textarea:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); }
+
+.assess-complete-btn {
+  margin-top: 24px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--gold) 0%, #B8923E 100%);
+  border: none; border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: all 0.35s;
+  animation: fadeUp 0.6s ease-out 0.5s both;
+}
+
+.assess-complete-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+
+.assess-back-btn {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.5);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer; transition: all 0.3s;
+  animation: fadeUp 0.6s ease-out 0.55s both;
+  text-decoration: none;
+}
+
+.assess-back-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); text-decoration: none; }
+
+/* Celebration overlay */
+.celebration-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,10,46,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000; display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 40px;
+}
+
+.celebration-overlay.active { display: flex; }
+
+.celebration-check {
+  width: 72px; height: 72px;
+  background: var(--success); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.celebration-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 400; color: var(--white); margin-bottom: 8px;
+}
+
+.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; }
+
+.celebration-btn {
+  padding: 14px 36px; background: var(--white); border: none;
+  border-radius: var(--radius-sm); color: var(--ink);
+  font-family: 'Outfit', sans-serif; font-size: 0.9rem;
+  font-weight: 500; cursor: pointer; transition: all 0.3s;
+  text-decoration: none;
+}
+
+.celebration-btn:hover { transform: translateY(-1px); text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="assess-screen">
+  <div class="assess-badge">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <path d="M18 4l4.2 8.5L31.5 14l-6.75 6.6L26.4 30 18 25.5 9.6 30l1.65-9.4L4.5 14l9.3-1.5L18 4z" fill="#1A0A2E"/>
+    </svg>
+  </div>
+  <h2 class="assess-title serif">Journey Complete</h2>
+  <p class="assess-subtitle">You've completed all 7 days. Reflect on your growth with these final questions.</p>
+
+  <div class="assess-questions">
+    {% for q in questions %}
+    <div class="assess-q">
+      <div class="assess-q-text">"{{ q }}"</div>
+      <textarea class="assess-textarea" data-assess-index="{{ loop.index0 }}" placeholder="Reflect honestly...">{{ (existing.responses or {}).get(loop.index0|string, '') if existing else '' }}</textarea>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button class="assess-complete-btn" onclick="completeAssessment()">Complete My Journey</button>
+  <a href="{{ url_for('dashboard') }}" class="assess-back-btn">Back to Dashboard</a>
+</div>
+
+<!-- Celebration -->
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-check">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <path d="M8 16l6 6 10-12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <h3 class="celebration-title serif">Journey Complete!</h3>
+  <p class="celebration-text">You have completed the 7-Day Spiritual Growth Workbook. Walk in dominion and maturity!</p>
+  <a href="{{ url_for('dashboard') }}" class="celebration-btn">Return to Dashboard</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function completeAssessment() {
+  const responses = {};
+  document.querySelectorAll('[data-assess-index]').forEach(ta => {
+    responses[ta.dataset.assessIndex] = ta.value;
+  });
+
+  fetch('/assessment/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ responses })
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      spawnConfetti();
+      setTimeout(() => {
+        document.getElementById('celebrationOverlay').classList.add('active');
+      }, 300);
+    }
+  });
+}
+</script>
+{% endblock %}

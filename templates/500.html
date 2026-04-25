@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Server Error — DCA{% endblock %}
+{% block extra_css %}
+<style>
+.error-page {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 20px; text-align: center;
+}
+.error-code { font-size: 5rem; font-weight: 700; color: var(--cream-dark); margin-bottom: 8px; }
+.error-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--ink); margin-bottom: 12px; }
+.error-text { font-size: 0.95rem; color: var(--ink-soft); font-weight: 300; margin-bottom: 28px; }
+.error-link { color: var(--royal-mid); font-weight: 500; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="error-code">500</div>
+  <h1 class="error-title">Something Went Wrong</h1>
+  <p class="error-text">Please try again later.</p>
+  <a href="/" class="error-link">Go Home</a>
+</div>
+{% endblock %}

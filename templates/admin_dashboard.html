@@ -1,0 +1,70 @@
+{% extends "admin_base.html" %}
+{% block title %}Overview — DCA Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard Overview</h1>
+    <p>Track first timer onboarding progress</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-card-label">Total First Timers</div>
+    <div class="stat-card-value">{{ total_users }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Active Today</div>
+    <div class="stat-card-value">{{ active_today }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Completion Rate</div>
+    <div class="stat-card-value">{{ completion_rate }}<span>%</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Avg. Days Completed</div>
+    <div class="stat-card-value">{{ avg_days }} <span>/ 7</span></div>
+  </div>
+</div>
+
+<!-- Day-by-day breakdown -->
+<div class="table-card">
+  <div class="table-header">
+    <h3>Day-by-Day Completion</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Completed By</th>
+        <th>Progress</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat in day_stats %}
+      <tr>
+        <td>
+          <strong>Day {{ stat.day }}</strong>
+          {% set titles = ['Identity in Christ','Dominion Over Sin','The Word Life','Prayer & Fellowship','Holiness & Character','Faith & Confession','Purpose & Impact'] %}
+          <br><span style="font-size:0.78rem;color:var(--ink-soft)">{{ titles[stat.day - 1] }}</span>
+        </td>
+        <td>
+          <strong>{{ stat.count }}</strong>
+          <span style="font-size:0.78rem;color:var(--ink-soft)"> user{{ 's' if stat.count != 1 else '' }}</span>
+        </td>
+        <td>
+          <div class="progress-mini">
+            <div class="progress-mini-fill" style="width: {{ (stat.count / total_users * 100) if total_users > 0 else 0 }}%"></div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div style="margin-top:20px; text-align:right;">
+  <a href="{{ url_for('admin_users') }}" class="btn-sm btn-sm-primary">View All Users &rarr;</a>
+</div>
+{% endblock %}

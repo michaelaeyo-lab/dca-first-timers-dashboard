@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block title %}Day {{ day_data.day }}: {{ day_data.title }} — DCA{% endblock %}
+
+{% block extra_css %}
+<style>
+.flow-top-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: rgba(253,246,236,0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.flow-back {
+  background: none; border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem; color: var(--ink-soft);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border-radius: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.flow-back:hover { background: rgba(0,0,0,0.04); color: var(--ink); text-decoration: none; }
+
+.flow-day-label { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
+
+.flow-progress-bar {
+  position: fixed; top: 56px; left: 0; right: 0;
+  height: 3px; background: var(--cream-dark); z-index: 100;
+}
+
+.flow-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--royal-light) 100%);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+.flow-container {
+  width: 100%; max-width: 600px;
+  padding: 80px 24px 120px;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto;
+}
+
+.flow-card {
+  width: 100%;
+  display: none; flex-direction: column;
+  animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.flow-card.active { display: flex; }
+
+.flow-card-number {
+  font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--gold); margin-bottom: 12px;
+}
+
+.flow-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 400; color: var(--ink);
+  line-height: 1.2; margin-bottom: 12px;
+}
+
+.flow-card-insight {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-style: italic; font-weight: 300;
+  color: var(--royal-mid); line-height: 1.6; margin-bottom: 16px;
+  padding-left: 20px; border-left: 2px solid var(--gold);
+}
+
+.flow-card-text {
+  font-size: 0.95rem; color: var(--ink-soft);
+  font-weight: 300; line-height: 1.7; margin-bottom: 24px;
+}
+
+.flow-textarea {
+  width: 100%; min-height: 140px;
+  padding: 18px 20px;
+  background: var(--white);
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem; font-weight: 300; color: var(--ink);
+  resize: vertical; outline: none;
+  transition: all 0.3s; line-height: 1.6;
+}
+
+.flow-textarea::placeholder { color: rgba(0,0,0,0.25); }
+.flow-textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-dim); }
+
+.flow-checklist { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+
+.check-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; background: var(--white);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.25s; border: 1.5px solid rgba(0,0,0,0.06);
+  user-select: none;
+}
+
+.check-item:hover { border-color: var(--gold); }
+.check-item.checked { border-color: var(--success); background: var(--success-light); }
+
+.check-box {
+  width: 24px; height: 24px;
+  border: 2px solid rgba(0,0,0,0.15);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.25s;
+}
+
+.check-item.checked .check-box { background: var(--success); border-color: var(--success); }
+.check-box svg { opacity: 0; transition: opacity 0.2s; }
+.check-item.checked .check-box svg { opacity: 1; }
+.check-label { font-size: 0.95rem; font-weight: 400; color: var(--ink); }
+
+.flow-action-box {
+  background: linear-gradient(135deg, var(--royal) 0%, var(--royal-mid) 100%);
+  border-radius: var(--radius); padding: 28px 24px; margin-top: 8px;
+}
+
+.flow-action-label {
+  font-size: 0.65rem; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--gold-light);
+  font-weight: 500; margin-bottom: 8px;
+}
+
+.flow-action-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; color: var(--white);
+  font-weight: 400; line-height: 1.4;
+}
+
+.flow-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 16px 20px 28px;
+  background: linear-gradient(0deg, var(--cream) 70%, transparent 100%);
+  display: flex; justify-content: center; gap: 12px; z-index: 100;
+}
+
+.flow-btn {
+  padding: 14px 32px; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 0.9rem;
+  font-weight: 500; cursor: pointer;
+  transition: all 0.3s; border: none;
+}
+
+.flow-btn-next { background: var(--royal); color: var(--white); min-width: 160px; }
+.flow-btn-next:hover { background: var(--royal-mid); transform: translateY(-1px); }
+.flow-btn-prev { background: var(--white); color: var(--ink-soft); border: 1px solid rgba(0,0,0,0.08); }
+.flow-btn-prev:hover { background: var(--cream-dark); }
+.flow-btn-complete { background: linear-gradient(135deg, var(--gold) 0%, #B8923E 100%); color: var(--ink); font-weight: 600; min-width: 200px; }
+.flow-btn-complete:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+
+/* Celebration overlay */
+.celebration-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,10,46,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000; display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 40px;
+}
+
+.celebration-overlay.active { display: flex; }
+
+.celebration-check {
+  width: 72px; height: 72px;
+  background: var(--success); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.celebration-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 400; color: var(--white); margin-bottom: 8px;
+}
+
+.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; }
+
+.celebration-btn {
+  padding: 14px 36px; background: var(--white); border: none;
+  border-radius: var(--radius-sm); color: var(--ink);
+  font-family: 'Outfit', sans-serif; font-size: 0.9rem;
+  font-weight: 500; cursor: pointer; transition: all 0.3s;
+  text-decoration: none;
+}
+
+.celebration-btn:hover { transform: translateY(-1px); text-decoration: none; }
+
+@media (max-width: 480px) {
+  .flow-nav { gap: 8px; }
+  .flow-btn { padding: 12px 20px; font-size: 0.85rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flow-top-bar">
+  <a href="{{ url_for('dashboard') }}" class="flow-back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Dashboard
+  </a>
+  <span class="flow-day-label">Day {{ day_data.day }}: {{ day_data.title }}</span>
+  <div style="width:70px"></div>
+</div>
+<div class="flow-progress-bar"><div class="flow-progress-fill" id="flowProgressFill"></div></div>
+
+<div class="flow-container" id="flowContainer">
+  <!-- Card 1: Insight -->
+  <div class="flow-card" data-card-id="insight">
+    <div class="flow-card-number">Lesson Insight</div>
+    <h2 class="flow-card-title serif">Day {{ day_data.day }}: {{ day_data.title }}</h2>
+    <div class="flow-card-insight">{{ day_data.insight }}</div>
+    <p class="flow-card-text">Take a moment to let this truth settle into your spirit. Read it aloud. Believe it. Meditate on it throughout the day.</p>
+  </div>
+
+  <!-- Cards 2+: Questions -->
+  {% for q in day_data.questions %}
+  <div class="flow-card" data-card-id="question-{{ loop.index0 }}">
+    <div class="flow-card-number">Discussion Question {{ loop.index }}</div>
+    <h2 class="flow-card-title serif">{{ q }}</h2>
+    <p class="flow-card-text">Write your honest reflection below. There are no wrong answers — this is between you and God.</p>
+    <textarea class="flow-textarea" data-type="answer" data-index="{{ loop.index0 }}" placeholder="Write your thoughts here...">{{ (progress.answers or {}).get(loop.index0|string, '') }}</textarea>
+  </div>
+  {% endfor %}
+
+  <!-- Personal Notes -->
+  <div class="flow-card" data-card-id="notes">
+    <div class="flow-card-number">Personal Notes</div>
+    <h2 class="flow-card-title serif">What else is on your heart?</h2>
+    <p class="flow-card-text">Use this space to journal freely — prayers, thoughts, revelations, or anything God is speaking to you.</p>
+    <textarea class="flow-textarea" data-type="notes" placeholder="Write freely...">{{ progress.notes or '' }}</textarea>
+  </div>
+
+  <!-- Action Step -->
+  <div class="flow-card" data-card-id="action">
+    <div class="flow-card-number">Today's Action Step</div>
+    <h2 class="flow-card-title serif">Put it into practice</h2>
+    <div class="flow-action-box">
+      <div class="flow-action-label">Your Action</div>
+      <div class="flow-action-text">{{ day_data.action }}</div>
+    </div>
+    <p class="flow-card-text" style="margin-top:20px">Commit to this step today. Faith without works is dead — take one bold step of obedience.</p>
+  </div>
+
+  <!-- Daily Checklist -->
+  <div class="flow-card" data-card-id="checklist">
+    <div class="flow-card-number">Daily Checklist</div>
+    <h2 class="flow-card-title serif">Mark what you completed today</h2>
+    <p class="flow-card-text">Consistency builds spiritual muscle. Check off each discipline you practiced.</p>
+    <div class="flow-checklist">
+      {% for item in day_data.checklist %}
+      <div class="check-item{{ ' checked' if (progress.checklist or {}).get(loop.index0|string) }}" data-check-index="{{ loop.index0 }}" onclick="toggleCheck(this, {{ loop.index0 }})">
+        <div class="check-box">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="check-label">{{ item }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="flow-nav">
+  <button class="flow-btn flow-btn-prev" id="flowPrevBtn" onclick="flowPrev()" style="display:none">Back</button>
+  <button class="flow-btn flow-btn-next" id="flowNextBtn" onclick="flowNext()">Continue</button>
+</div>
+
+<!-- Celebration Overlay -->
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-check">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <path d="M8 16l6 6 10-12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <h3 class="celebration-title serif">Day {{ day_data.day }} Complete!</h3>
+  <p class="celebration-text">"{{ day_data.action }}" — Keep walking in this truth.</p>
+  <a href="{{ url_for('dashboard') }}" class="celebration-btn">Continue</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DAY_NUM = {{ day_data.day }};
+const cards = document.querySelectorAll('.flow-card');
+let currentCard = 0;
+
+function showCard(index) {
+  cards.forEach(c => c.classList.remove('active'));
+  const card = cards[index];
+  card.classList.remove('active');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = '';
+  card.classList.add('active');
+  currentCard = index;
+
+  // Progress bar
+  const pct = ((index + 1) / cards.length) * 100;
+  document.getElementById('flowProgressFill').style.width = pct + '%';
+
+  // Nav buttons
+  document.getElementById('flowPrevBtn').style.display = index === 0 ? 'none' : 'block';
+  const nextBtn = document.getElementById('flowNextBtn');
+  if (index === cards.length - 1) {
+    nextBtn.textContent = 'Complete Day';
+    nextBtn.className = 'flow-btn flow-btn-complete';
+  } else {
+    nextBtn.textContent = 'Continue';
+    nextBtn.className = 'flow-btn flow-btn-next';
+  }
+}
+
+function collectData() {
+  const data = { answers: {}, notes: '', checklist: {}, current_card: '' };
+  const currentEl = cards[currentCard];
+  data.current_card = currentEl.dataset.cardId;
+
+  // Collect all answers across all cards
+  document.querySelectorAll('[data-type="answer"]').forEach(ta => {
+    data.answers[ta.dataset.index] = ta.value;
+  });
+
+  const notesEl = document.querySelector('[data-type="notes"]');
+  if (notesEl) data.notes = notesEl.value;
+
+  document.querySelectorAll('.check-item').forEach(el => {
+    data.checklist[el.dataset.checkIndex] = el.classList.contains('checked');
+  });
+
+  return data;
+}
+
+function saveData() {
+  const data = collectData();
+  fetch('/day/' + DAY_NUM + '/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+}
+
+function flowNext() {
+  saveData();
+  if (currentCard < cards.length - 1) {
+    showCard(currentCard + 1);
+  } else {
+    completeDay();
+  }
+}
+
+function flowPrev() {
+  saveData();
+  if (currentCard > 0) {
+    showCard(currentCard - 1);
+  }
+}
+
+function completeDay() {
+  saveData();
+  fetch('/day/' + DAY_NUM + '/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      spawnConfetti();
+      document.getElementById('celebrationOverlay').classList.add('active');
+    }
+  });
+}
+
+function toggleCheck(el, idx) {
+  el.classList.toggle('checked');
+}
+
+// Init: show first card
+showCard(0);
+</script>
+{% endblock %}
