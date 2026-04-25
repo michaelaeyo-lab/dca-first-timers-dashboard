@@ -231,6 +231,38 @@ ASSESSMENT_QUESTIONS = [
 
 
 # ═══════════════════════════════════════════════════
+# ADMIN SEED/RESET (one-time setup URL)
+# ═══════════════════════════════════════════════════
+@app.route("/setup-admin")
+def setup_admin():
+    """Reset or create the admin user using current env vars.
+    Visit this URL once after deployment to ensure admin exists.
+    """
+    email = os.environ.get("ADMIN_EMAIL", "admin@dca.church")
+    password = os.environ.get("ADMIN_PASSWORD", "changeme")
+
+    db = SessionLocal()
+    try:
+        admin = db.query(AdminUser).filter_by(email=email).first()
+        if admin:
+            admin.set_password(password)
+            db.commit()
+            return jsonify({"status": "Admin password reset", "email": email})
+        else:
+            admin = AdminUser(
+                name="DCA Admin",
+                email=email,
+                password_hash=generate_password_hash(password),
+                role="super_admin",
+            )
+            db.add(admin)
+            db.commit()
+            return jsonify({"status": "Admin created", "email": email})
+    finally:
+        db.close()
+
+
+# ═══════════════════════════════════════════════════
 # AUTH ROUTES
 # ═══════════════════════════════════════════════════
 @app.route("/login", methods=["GET", "POST"])
