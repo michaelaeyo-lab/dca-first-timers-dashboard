@@ -40,23 +40,53 @@ login_manager.login_message_category = "info"
 # ═══════════════════════════════════════════════════
 # CREATE TABLES + SEED ADMIN ON STARTUP
 # ═══════════════════════════════════════════════════
-with app.app_context():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        if not db.query(AdminUser).first():
-            admin = AdminUser(
-                name="DCA Admin",
-                email=os.environ.get("ADMIN_EMAIL", "admin@dca.church"),
-                password_hash=generate_password_hash(
-                    os.environ.get("ADMIN_PASSWORD", "changeme")
-                ),
-                role="super_admin",
-            )
-            db.add(admin)
-            db.commit()
-    finally:
-        db.close()
+try:
+    with app.app_context():
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            if not db.query(AdminUser).first():
+                admin = AdminUser(
+                    name="DCA Admin",
+                    email=os.environ.get("ADMIN_EMAIL", "admin@dca.church"),
+                    password_hash=generate_password_hash(
+                        os.environ.get("ADMIN_PASSWORD", "changeme")
+                    ),
+                    role="super_admin",
+                )
+                db.add(admin)
+                db.commit()
+        finally:
+            db.close()
+except Exception as e:
+    print(f"DB init warning (will retry on first request): {e}")
+
+_db_initialized = False
+
+@app.before_request
+def ensure_db():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            Base.metadata.create_all(bind=engine)
+            db = SessionLocal()
+            try:
+                if not db.query(AdminUser).first():
+                    admin = AdminUser(
+                        name="DCA Admin",
+                        email=os.environ.get("ADMIN_EMAIL", "admin@dca.church"),
+                        password_hash=generate_password_hash(
+                            os.environ.get("ADMIN_PASSWORD", "changeme")
+                        ),
+                        role="super_admin",
+                    )
+                    db.add(admin)
+                    db.commit()
+            finally:
+                db.close()
+            _db_initialized = True
+        except Exception:
+            pass
 
 
 # ═══════════════════════════════════════════════════
