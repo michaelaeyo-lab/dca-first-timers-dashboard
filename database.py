@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Railway provides postgres:// but SQLAlchemy 2.0 requires postgresql://
-database_url = os.environ.get("DATABASE_URL") or os.environ.get(
-    "LOCAL_DATABASE_URL", "sqlite:///local.db"
-)
+database_url = (
+    os.environ.get("DATABASE_URL") or
+    os.environ.get("LOCAL_DATABASE_URL", "sqlite:///local.db")
+).strip()
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
