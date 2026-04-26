@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, scoped_session, DeclarativeBase
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,15 +14,9 @@ if database_url.startswith("postgres://"):
 
 engine = create_engine(database_url, pool_pre_ping=True, pool_recycle=300)
 SessionLocal = sessionmaker(bind=engine)
+# Scoped session for Flask-Login user loader (keeps objects attached)
+ScopedSession = scoped_session(SessionLocal)
 
 
 class Base(DeclarativeBase):
     pass
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        return db
-    finally:
-        pass  # caller is responsible for closing

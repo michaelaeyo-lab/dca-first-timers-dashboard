@@ -17,7 +17,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func as sa_func, desc
 
-from database import engine, SessionLocal, Base
+from database import engine, SessionLocal, ScopedSession, Base
 from models import FirstTimer, AdminUser, DayProgress, ActivityLog, Assessment
 
 
@@ -94,8 +94,8 @@ def ensure_db():
 # ═══════════════════════════════════════════════════
 @login_manager.user_loader
 def load_user(user_id):
-    db = SessionLocal()
     try:
+        db = ScopedSession()
         prefix, uid = user_id.split(":", 1)
         uid = int(uid)
         if prefix == "ft":
@@ -104,8 +104,11 @@ def load_user(user_id):
             return db.query(AdminUser).get(uid)
     except Exception:
         return None
-    finally:
-        db.close()
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    ScopedSession.remove()
 
 
 # ═══════════════════════════════════════════════════
@@ -283,9 +286,12 @@ def login():
             if user and user.check_password(password):
                 user.last_login = datetime.utcnow()
                 db.commit()
+                user_id = user.id
+                log_activity(db, user_id, "login")
                 login_user(user, remember=True)
-                log_activity(db, user.id, "login")
-                return redirect(request.args.get("next") or url_for("dashboard"))
+                next_page = request.args.get("next") or url_for("dashboard")
+                db.close()
+                return redirect(next_page)
 
             # Check admins
             admin = db.query(AdminUser).filter_by(email=email).first()
@@ -293,11 +299,17 @@ def login():
                 admin.last_login = datetime.utcnow()
                 db.commit()
                 login_user(admin, remember=True)
+                db.close()
                 return redirect(url_for("admin_dashboard"))
 
             flash("Invalid email or password.", "error")
+        except Exception as e:
+            flash(f"Login error: {str(e)}", "error")
         finally:
-            db.close()
+            try:
+                db.close()
+            except Exception:
+                pass
 
     return render_template("login.html")
 
@@ -343,12 +355,26 @@ def register():
             user.set_password(password)
             db.add(user)
             db.commit()
-            db.refresh(user)
 
+            # Re-fetch to get the ID safely
+            user = db.query(FirstTimer).filter_by(email=email).first()
             log_activity(db, user.id, "signup")
+
+            # Store user ID before closing db
+            user_id = user.id
+            user_name = user.first_name
+            db.close()
+
+            # Re-fetch for login_user (needs attached object)
+            db = SessionLocal()
+            user = db.query(FirstTimer).get(user_id)
             login_user(user, remember=True)
-            flash(f"Welcome, {first_name}! Your 7-day journey begins now.", "success")
+            flash(f"Welcome, {user_name}! Your 7-day journey begins now.", "success")
             return redirect(url_for("dashboard"))
+        except Exception as e:
+            db.rollback()
+            flash(f"Registration error: {str(e)}", "error")
+            return render_template("register.html")
         finally:
             db.close()
 
