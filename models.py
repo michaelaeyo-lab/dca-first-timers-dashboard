@@ -128,7 +128,7 @@ class Assessment(Base):
     responses = mapped_column(JSON, default=dict)  # {"0": "response", "1": "...", "2": "..."}
     completed_at = mapped_column(DateTime, server_default=func.now())
 
-    user = relationship("FirstTimer", back_populates="assessment")
+    user = relationship("FirstTimer", back_populates="assessments")
 
     __table_args__ = (
         UniqueConstraint("user_id", "week_number", name="uq_user_week_assessment"),
