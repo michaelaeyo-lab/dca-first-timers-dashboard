@@ -23,6 +23,7 @@
         <th>Name</th>
         <th>Email</th>
         <th>Phone</th>
+        <th>Week</th>
         <th>Progress</th>
         <th>Last Active</th>
         <th>Registered</th>
@@ -37,12 +38,16 @@
           <td style="font-size:0.82rem;color:var(--ink-soft)">{{ item.user.email }}</td>
           <td style="font-size:0.82rem;color:var(--ink-soft)">{{ item.user.phone or '—' }}</td>
           <td>
+            <span class="badge badge-warning" style="font-size:0.78rem">Wk {{ item.current_week }} / {{ total_weeks }}</span>
+          </td>
+          <td>
+            {% set total_days = total_weeks * 7 %}
             <div style="display:flex;align-items:center;gap:10px">
               <div class="progress-mini">
-                <div class="progress-mini-fill" style="width: {{ (item.completed_days / 7 * 100)|round }}%"></div>
+                <div class="progress-mini-fill" style="width: {{ (item.completed_days / total_days * 100)|round }}%"></div>
               </div>
-              <span style="font-size:0.8rem;font-weight:500;color:var(--ink)">{{ item.completed_days }}/7</span>
-              {% if item.completed_days == 7 %}
+              <span style="font-size:0.8rem;font-weight:500;color:var(--ink)">{{ item.completed_days }}/{{ total_days }}</span>
+              {% if item.completed_days >= total_days %}
                 <span class="badge badge-success">Done</span>
               {% elif item.completed_days > 0 %}
                 <span class="badge badge-warning">Active</span>
@@ -64,7 +69,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="7" style="text-align:center;padding:40px 20px;color:var(--ink-soft)">
+          <td colspan="8" style="text-align:center;padding:40px 20px;color:var(--ink-soft)">
             {% if search %}
               No users found matching "{{ search }}"
             {% else %}

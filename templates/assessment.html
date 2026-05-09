@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Final Assessment — DCA{% endblock %}
+{% block title %}Week {{ current_week }} Assessment — DCA{% endblock %}
 
 {% block extra_css %}
 .assess-screen {
@@ -20,6 +20,18 @@
   margin-bottom: 28px;
   box-shadow: 0 0 60px rgba(201,168,76,0.3);
   animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.assess-week-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.15);
+  padding: 5px 14px;
+  border-radius: 14px;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+  animation: fadeUp 0.6s ease-out 0.15s both;
 }
 
 .assess-title {
@@ -127,7 +139,7 @@
   font-size: 2rem; font-weight: 400; color: var(--white); margin-bottom: 8px;
 }
 
-.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; }
+.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
 
 .celebration-btn {
   padding: 14px 36px; background: var(--white); border: none;
@@ -147,8 +159,14 @@
       <path d="M18 4l4.2 8.5L31.5 14l-6.75 6.6L26.4 30 18 25.5 9.6 30l1.65-9.4L4.5 14l9.3-1.5L18 4z" fill="#1A0A2E"/>
     </svg>
   </div>
-  <h2 class="assess-title serif">Journey Complete</h2>
-  <p class="assess-subtitle">You've completed all 7 days. Reflect on your growth with these final questions.</p>
+  <div class="assess-week-badge">Week {{ current_week }} of {{ total_weeks }} — {{ week_label }}</div>
+  {% if is_final_week %}
+  <h2 class="assess-title serif">Final Assessment</h2>
+  <p class="assess-subtitle">You've completed all 4 weeks of the spiritual growth journey. Reflect on how far you've come.</p>
+  {% else %}
+  <h2 class="assess-title serif">Week {{ current_week }} Complete</h2>
+  <p class="assess-subtitle">You've completed all 7 days of Week {{ current_week }}. Reflect on your growth before moving to Week {{ current_week + 1 }}.</p>
+  {% endif %}
 
   <div class="assess-questions">
     {% for q in questions %}
@@ -159,7 +177,11 @@
     {% endfor %}
   </div>
 
+  {% if is_final_week %}
   <button class="assess-complete-btn" onclick="completeAssessment()">Complete My Journey</button>
+  {% else %}
+  <button class="assess-complete-btn" onclick="completeAssessment()">Complete Week {{ current_week }} &amp; Begin Week {{ current_week + 1 }}</button>
+  {% endif %}
   <a href="{{ url_for('dashboard') }}" class="assess-back-btn">Back to Dashboard</a>
 </div>
 
@@ -170,8 +192,13 @@
       <path d="M8 16l6 6 10-12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
+  {% if is_final_week %}
   <h3 class="celebration-title serif">Journey Complete!</h3>
-  <p class="celebration-text">You have completed the 7-Day Spiritual Growth Workbook. Walk in dominion and maturity!</p>
+  <p class="celebration-text">Congratulations! You have completed the entire 4-week Spiritual Growth Program. Walk in dominion and maturity!</p>
+  {% else %}
+  <h3 class="celebration-title serif" id="celebTitle">Week {{ current_week }} Complete!</h3>
+  <p class="celebration-text" id="celebText">Well done! You've finished Week {{ current_week }}: {{ week_label }}. Week {{ current_week + 1 }} begins with Day 1 tomorrow.</p>
+  {% endif %}
   <a href="{{ url_for('dashboard') }}" class="celebration-btn">Return to Dashboard</a>
 </div>
 {% endblock %}
@@ -184,9 +211,10 @@ function completeAssessment() {
     responses[ta.dataset.assessIndex] = ta.value;
   });
 
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
   fetch('/assessment/complete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
     body: JSON.stringify({ responses })
   }).then(r => r.json()).then(data => {
     if (data.status === 'ok') {

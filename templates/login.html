@@ -116,6 +116,7 @@
   <p class="auth-subtitle">Sign in to continue your journey</p>
 
   <form class="auth-form" method="POST" action="{{ url_for('login') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="input-group">
       <label>Email Address</label>
       <input type="email" name="email" placeholder="you@example.com" required autofocus>
@@ -126,6 +127,6 @@
     </div>
     <button type="submit" class="btn-primary" style="margin-top:8px;">Sign In</button>
   </form>
-  <p class="auth-link">New here? <a href="{{ url_for('register') }}">Begin your 7-day journey</a></p>
+  <p class="auth-link">New here? <a href="{{ url_for('register') }}">Begin your 4-week journey</a></p>
 </div>
 {% endblock %}

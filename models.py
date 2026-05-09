@@ -23,11 +23,12 @@ class FirstTimer(UserMixin, Base):
     created_at = mapped_column(DateTime, server_default=func.now())
     last_login = mapped_column(DateTime, nullable=True)
     is_active = mapped_column(Boolean, default=True)
+    current_week = mapped_column(Integer, default=1)  # 1-4
 
     # Relationships
     day_progress = relationship("DayProgress", back_populates="user", cascade="all, delete-orphan")
     activity_logs = relationship("ActivityLog", back_populates="user", cascade="all, delete-orphan")
-    assessment = relationship("Assessment", back_populates="user", uselist=False)
+    assessments = relationship("Assessment", back_populates="user", cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -79,6 +80,7 @@ class DayProgress(Base):
 
     id = mapped_column(Integer, primary_key=True)
     user_id = mapped_column(Integer, ForeignKey("first_timers.id"), nullable=False)
+    week_number = mapped_column(Integer, nullable=False, default=1)  # 1-4
     day_number = mapped_column(Integer, nullable=False)  # 1-7
     started_at = mapped_column(DateTime, server_default=func.now())
     completed_at = mapped_column(DateTime, nullable=True)
@@ -91,7 +93,7 @@ class DayProgress(Base):
     user = relationship("FirstTimer", back_populates="day_progress")
 
     __table_args__ = (
-        UniqueConstraint("user_id", "day_number", name="uq_user_day"),
+        UniqueConstraint("user_id", "week_number", "day_number", name="uq_user_week_day"),
     )
 
 
@@ -121,8 +123,13 @@ class Assessment(Base):
     __tablename__ = "assessments"
 
     id = mapped_column(Integer, primary_key=True)
-    user_id = mapped_column(Integer, ForeignKey("first_timers.id"), unique=True, nullable=False)
+    user_id = mapped_column(Integer, ForeignKey("first_timers.id"), nullable=False)
+    week_number = mapped_column(Integer, nullable=False, default=1)  # 1-4
     responses = mapped_column(JSON, default=dict)  # {"0": "response", "1": "...", "2": "..."}
     completed_at = mapped_column(DateTime, server_default=func.now())
 
     user = relationship("FirstTimer", back_populates="assessment")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "week_number", name="uq_user_week_assessment"),
+    )

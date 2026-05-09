@@ -138,10 +138,11 @@
     </svg>
   </div>
   <h1 class="welcome-title">Welcome to<br><strong>Dominion Covenant Assembly</strong></h1>
-  <p class="welcome-subtitle">Your journey to Christian growth begins here</p>
+  <p class="welcome-subtitle">Your 4-week journey to Christian growth begins here</p>
   <div class="welcome-divider"></div>
 
   <form class="welcome-form" method="POST" action="{{ url_for('register') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-row">
       <div class="input-group">
         <label>First Name</label>
@@ -163,14 +164,14 @@
     <div class="form-row">
       <div class="input-group">
         <label>Password</label>
-        <input type="password" name="password" placeholder="Min 6 characters" required minlength="6">
+        <input type="password" name="password" placeholder="Min 8 chars, 1 uppercase, 1 number" required minlength="8">
       </div>
       <div class="input-group">
         <label>Confirm Password</label>
-        <input type="password" name="confirm_password" placeholder="Repeat password" required minlength="6">
+        <input type="password" name="confirm_password" placeholder="Repeat password" required minlength="8">
       </div>
     </div>
-    <button type="submit" class="btn-primary" style="margin-top:8px;">Begin Your 7-Day Journey</button>
+    <button type="submit" class="btn-primary" style="margin-top:8px;">Begin Your 4-Week Journey</button>
   </form>
   <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
 </div>

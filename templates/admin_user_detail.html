@@ -1,5 +1,5 @@
 {% extends "admin_base.html" %}
-{% block title %}{{ user.full_name }} — DCA Admin{% endblock %}
+{% block title %}{{ user.first_name }} {{ user.last_name }} — DCA Admin{% endblock %}
 
 {% block admin_content %}
 <div class="page-header">
@@ -10,26 +10,30 @@
   <a href="{{ url_for('admin_users') }}" class="btn-sm btn-sm-outline">&larr; Back to Users</a>
 </div>
 
-<!-- Overview -->
+<!-- Overall Overview -->
+{% set ns = namespace(total_completed=0) %}
+{% for w in range(1, total_weeks + 1) %}
+  {% set week_progress = all_progress.get(w, {}) %}
+  {% for dp in week_progress.values() %}
+    {% if dp.is_completed %}
+      {% set ns.total_completed = ns.total_completed + 1 %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% set total_days = total_weeks * 7 %}
+
 <div class="stats-grid" style="margin-bottom:24px">
-  {% set completed_count = progress.values()|selectattr('is_completed')|list|length %}
+  <div class="stat-card">
+    <div class="stat-card-label">Current Week</div>
+    <div class="stat-card-value">{{ user.current_week or 1 }} <span>/ {{ total_weeks }}</span></div>
+  </div>
   <div class="stat-card">
     <div class="stat-card-label">Days Completed</div>
-    <div class="stat-card-value">{{ completed_count }} <span>/ 7</span></div>
+    <div class="stat-card-value">{{ ns.total_completed }} <span>/ {{ total_days }}</span></div>
   </div>
   <div class="stat-card">
-    <div class="stat-card-label">Progress</div>
-    <div class="stat-card-value">{{ (completed_count / 7 * 100)|round|int }}<span>%</span></div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">Assessment</div>
-    <div class="stat-card-value" style="font-size:1.2rem">
-      {% if assessment %}
-        <span class="badge badge-success" style="font-size:0.85rem">Complete</span>
-      {% else %}
-        <span class="badge badge-muted" style="font-size:0.85rem">Pending</span>
-      {% endif %}
-    </div>
+    <div class="stat-card-label">Overall Progress</div>
+    <div class="stat-card-value">{{ (ns.total_completed / total_days * 100)|round|int }}<span>%</span></div>
   </div>
   <div class="stat-card">
     <div class="stat-card-label">Last Login</div>
@@ -39,83 +43,130 @@
   </div>
 </div>
 
-<!-- Day-by-Day Responses -->
-<div class="detail-card">
-  <h3>Day-by-Day Responses</h3>
+<!-- Week Tabs -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+  {% for w in range(1, total_weeks + 1) %}
+    {% set wk_progress = all_progress.get(w, {}) %}
+    {% set wk_done = wk_progress.values()|selectattr('is_completed')|list|length %}
+    {% set wk_assessment = assessments_by_week.get(w) %}
+    <button class="week-tab {% if w == 1 %}active{% endif %}" onclick="showWeek({{ w }})"
+      style="padding:8px 16px;border-radius:8px;border:2px solid var(--gold);background:{% if w == 1 %}var(--gold){% else %}transparent{% endif %};color:{% if w == 1 %}#fff{% else %}var(--ink){% endif %};cursor:pointer;font-weight:600;font-size:0.85rem;transition:all 0.2s">
+      Week {{ w }}: {{ week_labels.get(w, '') }}
+      <span style="font-size:0.75rem;opacity:0.8">({{ wk_done }}/7{% if wk_assessment %} &#10003;{% endif %})</span>
+    </button>
+  {% endfor %}
+</div>
 
-  {% for day in days_data %}
-    {% set dp = progress.get(day.day) %}
-    <div class="day-section {{ 'open' if dp and dp.is_completed else '' }}" onclick="this.classList.toggle('open')">
-      <div class="day-section-header">
-        <h4>
-          Day {{ day.day }}: {{ day.title }}
-          {% if dp and dp.is_completed %}
-            <span class="badge badge-success" style="margin-left:8px">Complete</span>
-          {% elif dp %}
-            <span class="badge badge-warning" style="margin-left:8px">In Progress</span>
+<!-- Per-Week Content -->
+{% for w in range(1, total_weeks + 1) %}
+  {% set week_progress = all_progress.get(w, {}) %}
+  {% set wk_completed = week_progress.values()|selectattr('is_completed')|list|length %}
+  {% set wk_assessment = assessments_by_week.get(w) %}
+
+  <div class="week-content" id="week-{{ w }}" style="{% if w != 1 %}display:none{% endif %}">
+
+    <!-- Week Stats -->
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-card-label">Week {{ w }} Days</div>
+        <div class="stat-card-value">{{ wk_completed }} <span>/ 7</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Week {{ w }} Progress</div>
+        <div class="stat-card-value">{{ (wk_completed / 7 * 100)|round|int }}<span>%</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Assessment</div>
+        <div class="stat-card-value" style="font-size:1.2rem">
+          {% if wk_assessment %}
+            <span class="badge badge-success" style="font-size:0.85rem">Complete</span>
           {% else %}
-            <span class="badge badge-muted" style="margin-left:8px">Not Started</span>
+            <span class="badge badge-muted" style="font-size:0.85rem">Pending</span>
           {% endif %}
-        </h4>
-        <span class="day-section-toggle">&#9660;</span>
+        </div>
       </div>
-      <div class="day-section-body" onclick="event.stopPropagation()">
-        {% if dp %}
-          <div class="detail-row">
-            <div class="detail-label">Started</div>
-            <div class="detail-value">{{ dp.started_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.started_at else 'N/A' }}</div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-label">Completed</div>
-            <div class="detail-value">{{ dp.completed_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.completed_at else 'Not yet' }}</div>
-          </div>
+    </div>
 
-          {% set answers = dp.answers or {} %}
-          {% for q in day.questions %}
-          <div class="detail-row">
-            <div class="detail-label">Q{{ loop.index }}: {{ q }}</div>
-            <div class="detail-value">{{ answers.get(loop.index0|string, '—') or '—' }}</div>
-          </div>
-          {% endfor %}
+    <!-- Day-by-Day Responses -->
+    <div class="detail-card">
+      <h3>Week {{ w }}: {{ week_labels.get(w, '') }} — Day-by-Day Responses</h3>
 
-          <div class="detail-row">
-            <div class="detail-label">Personal Notes</div>
-            <div class="detail-value">{{ dp.notes or '—' }}</div>
+      {% for day in days_data %}
+        {% set dp = week_progress.get(day.day) %}
+        <div class="day-section {{ 'open' if dp and dp.is_completed else '' }}" onclick="this.classList.toggle('open')">
+          <div class="day-section-header">
+            <h4>
+              Day {{ day.day }}: {{ day.title }}
+              {% if dp and dp.is_completed %}
+                <span class="badge badge-success" style="margin-left:8px">Complete</span>
+              {% elif dp %}
+                <span class="badge badge-warning" style="margin-left:8px">In Progress</span>
+              {% else %}
+                <span class="badge badge-muted" style="margin-left:8px">Not Started</span>
+              {% endif %}
+            </h4>
+            <span class="day-section-toggle">&#9660;</span>
           </div>
+          <div class="day-section-body" onclick="event.stopPropagation()">
+            {% if dp %}
+              <div class="detail-row">
+                <div class="detail-label">Started</div>
+                <div class="detail-value">{{ dp.started_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.started_at else 'N/A' }}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Completed</div>
+                <div class="detail-value">{{ dp.completed_at.strftime('%b %d, %Y at %I:%M:%S %p') if dp.completed_at else 'Not yet' }}</div>
+              </div>
 
-          {% set checklist = dp.checklist or {} %}
-          <div class="detail-row">
-            <div class="detail-label">Checklist</div>
-            <div class="detail-value">
-              {% for item in day.checklist %}
-                {% if checklist.get(loop.index0|string) %}
-                  <span class="badge badge-success" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
-                {% else %}
-                  <span class="badge badge-muted" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
-                {% endif %}
+              {% set answers = dp.answers or {} %}
+              {% for q in day.questions %}
+              <div class="detail-row">
+                <div class="detail-label">Q{{ loop.index }}: {{ q }}</div>
+                <div class="detail-value">{{ answers.get(loop.index0|string, '—') or '—' }}</div>
+              </div>
               {% endfor %}
-            </div>
-          </div>
-        {% else %}
-          <p style="color:var(--ink-soft);font-size:0.88rem;padding:8px 0">This day has not been started yet.</p>
-        {% endif %}
-      </div>
-    </div>
-  {% endfor %}
-</div>
 
-<!-- Assessment Responses -->
-{% if assessment %}
-<div class="detail-card">
-  <h3>Final Assessment — {{ assessment.completed_at.strftime('%b %d, %Y at %I:%M %p') if assessment.completed_at else '' }}</h3>
-  {% for q in assessment_questions %}
-    <div class="detail-row">
-      <div class="detail-label">{{ q }}</div>
-      <div class="detail-value">{{ (assessment.responses or {}).get(loop.index0|string, '—') or '—' }}</div>
+              <div class="detail-row">
+                <div class="detail-label">Personal Notes</div>
+                <div class="detail-value">{{ dp.notes or '—' }}</div>
+              </div>
+
+              {% set checklist = dp.checklist or {} %}
+              <div class="detail-row">
+                <div class="detail-label">Checklist</div>
+                <div class="detail-value">
+                  {% for item in day.checklist %}
+                    {% if checklist.get(loop.index0|string) %}
+                      <span class="badge badge-success" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
+                    {% else %}
+                      <span class="badge badge-muted" style="margin-right:4px;margin-bottom:4px">{{ item }}</span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              <p style="color:var(--ink-soft);font-size:0.88rem;padding:8px 0">This day has not been started yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
     </div>
-  {% endfor %}
-</div>
-{% endif %}
+
+    <!-- Week Assessment Responses -->
+    {% if wk_assessment %}
+    <div class="detail-card">
+      <h3>Week {{ w }} Assessment — {{ wk_assessment.completed_at.strftime('%b %d, %Y at %I:%M %p') if wk_assessment.completed_at else '' }}</h3>
+      {% for q in assessment_questions %}
+        <div class="detail-row">
+          <div class="detail-label">{{ q }}</div>
+          <div class="detail-value">{{ (wk_assessment.responses or {}).get(loop.index0|string, '—') or '—' }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+{% endfor %}
 
 <!-- Activity Timeline -->
 <div class="detail-card">
@@ -135,19 +186,24 @@
       <div class="timeline-content">
         <div class="timeline-action">
           {% if act.action_type == 'signup' %}
-            <strong>Registered</strong> for the 7-day journey
+            <strong>Registered</strong> for the 4-week journey
           {% elif act.action_type == 'login' %}
             <strong>Logged in</strong>
           {% elif act.action_type == 'day_started' %}
             <strong>Started Day {{ act.day_number }}</strong>
+            {% if act.extra and act.extra.week_number %}<span style="font-size:0.78rem;color:var(--ink-soft)"> (Week {{ act.extra.week_number }})</span>{% endif %}
           {% elif act.action_type == 'card_answered' %}
             Answered <strong>{{ act.card_name or 'a card' }}</strong> on Day {{ act.day_number }}
+            {% if act.extra and act.extra.week_number %}<span style="font-size:0.78rem;color:var(--ink-soft)"> (Week {{ act.extra.week_number }})</span>{% endif %}
           {% elif act.action_type == 'day_completed' %}
             <strong>Completed Day {{ act.day_number }}</strong>
+            {% if act.extra and act.extra.week_number %}<span style="font-size:0.78rem;color:var(--ink-soft)"> (Week {{ act.extra.week_number }})</span>{% endif %}
           {% elif act.action_type == 'assessment_started' %}
-            <strong>Started Final Assessment</strong>
+            <strong>Started Assessment</strong>
+            {% if act.extra and act.extra.week_number %}<span style="font-size:0.78rem;color:var(--ink-soft)"> (Week {{ act.extra.week_number }})</span>{% endif %}
           {% elif act.action_type == 'assessment_completed' %}
-            <strong>Completed Final Assessment</strong>
+            <strong>Completed Assessment</strong>
+            {% if act.extra and act.extra.week_number %}<span style="font-size:0.78rem;color:var(--ink-soft)"> (Week {{ act.extra.week_number }})</span>{% endif %}
           {% else %}
             {{ act.action_type }}
           {% endif %}
@@ -161,4 +217,17 @@
   <p style="color:var(--ink-soft);font-size:0.88rem;padding:16px 0">No activity recorded yet.</p>
   {% endif %}
 </div>
+
+<script>
+function showWeek(w) {
+  document.querySelectorAll('.week-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.week-tab').forEach(el => {
+    el.style.background = 'transparent';
+    el.style.color = 'var(--ink)';
+  });
+  document.getElementById('week-' + w).style.display = 'block';
+  event.target.closest('.week-tab').style.background = 'var(--gold)';
+  event.target.closest('.week-tab').style.color = '#fff';
+}
+</script>
 {% endblock %}

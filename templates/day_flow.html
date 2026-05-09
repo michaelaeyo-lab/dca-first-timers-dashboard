@@ -31,6 +31,16 @@
 
 .flow-day-label { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
 
+.flow-week-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--gold);
+  background: var(--gold-dim);
+  padding: 3px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+
 .flow-progress-bar {
   position: fixed; top: 56px; left: 0; right: 0;
   height: 3px; background: var(--cream-dark); z-index: 100;
@@ -83,6 +93,50 @@
 .flow-card-text {
   font-size: 0.95rem; color: var(--ink-soft);
   font-weight: 300; line-height: 1.7; margin-bottom: 24px;
+}
+
+/* Scripture card styles */
+.scripture-box {
+  background: linear-gradient(135deg, rgba(61,18,89,0.04) 0%, rgba(201,168,76,0.08) 100%);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  border: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 20px;
+}
+
+.scripture-reference {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.scripture-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--royal);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.scripture-supporting {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(201,168,76,0.15);
+}
+
+.scripture-supporting .scripture-reference {
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+}
+
+.scripture-supporting .scripture-text {
+  font-size: 1.1rem;
+  color: var(--ink-soft);
 }
 
 .flow-textarea {
@@ -189,7 +243,7 @@
   font-size: 2rem; font-weight: 400; color: var(--white); margin-bottom: 8px;
 }
 
-.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; }
+.celebration-text { font-size: 0.95rem; color: rgba(255,255,255,0.6); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
 
 .celebration-btn {
   padding: 14px 36px; background: var(--white); border: none;
@@ -214,17 +268,34 @@
     Dashboard
   </a>
   <span class="flow-day-label">Day {{ day_data.day }}: {{ day_data.title }}</span>
-  <div style="width:70px"></div>
+  <span class="flow-week-badge">Week {{ current_week }}</span>
 </div>
 <div class="flow-progress-bar"><div class="flow-progress-fill" id="flowProgressFill"></div></div>
 
 <div class="flow-container" id="flowContainer">
+  <!-- Card 0: Scripture -->
+  <div class="flow-card" data-card-id="scripture">
+    <div class="flow-card-number">Today's Scripture</div>
+    <h2 class="flow-card-title serif">Day {{ day_data.day }}: {{ day_data.title }}</h2>
+    <div class="scripture-box">
+      <div class="scripture-reference">{{ day_data.verse }}</div>
+      <p class="scripture-text">"{{ day_data.verse_text }}"</p>
+      {% if day_data.supporting_verse %}
+      <div class="scripture-supporting">
+        <div class="scripture-reference">{{ day_data.supporting_verse }}</div>
+        <p class="scripture-text">"{{ day_data.supporting_verse_text }}"</p>
+      </div>
+      {% endif %}
+    </div>
+    <p class="flow-card-text">Read these scriptures aloud. Let them settle deep into your spirit. This is your foundation for today.</p>
+  </div>
+
   <!-- Card 1: Insight -->
   <div class="flow-card" data-card-id="insight">
     <div class="flow-card-number">Lesson Insight</div>
-    <h2 class="flow-card-title serif">Day {{ day_data.day }}: {{ day_data.title }}</h2>
+    <h2 class="flow-card-title serif">{{ day_data.title }}</h2>
     <div class="flow-card-insight">{{ day_data.insight }}</div>
-    <p class="flow-card-text">Take a moment to let this truth settle into your spirit. Read it aloud. Believe it. Meditate on it throughout the day.</p>
+    <p class="flow-card-text">Take a moment to let this truth settle into your spirit. Meditate on it throughout the day. Week {{ current_week }} is about {{ week_label | lower }} — go deeper than before.</p>
   </div>
 
   <!-- Cards 2+: Questions -->
@@ -287,7 +358,8 @@
     </svg>
   </div>
   <h3 class="celebration-title serif">Day {{ day_data.day }} Complete!</h3>
-  <p class="celebration-text">"{{ day_data.action }}" — Keep walking in this truth.</p>
+  <p class="celebration-text">"{{ day_data.verse_text }}"<br><small>— {{ day_data.verse }}</small></p>
+  <p class="celebration-text" style="margin-top:-16px">Keep your streak going! The next day unlocks tomorrow.</p>
   <a href="{{ url_for('dashboard') }}" class="celebration-btn">Continue</a>
 </div>
 {% endblock %}
@@ -344,11 +416,13 @@ function collectData() {
   return data;
 }
 
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+
 function saveData() {
   const data = collectData();
   fetch('/day/' + DAY_NUM + '/save', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
     body: JSON.stringify(data)
   });
 }
@@ -373,7 +447,7 @@ function completeDay() {
   saveData();
   fetch('/day/' + DAY_NUM + '/complete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
   }).then(r => r.json()).then(data => {
     if (data.status === 'ok') {
       spawnConfetti();

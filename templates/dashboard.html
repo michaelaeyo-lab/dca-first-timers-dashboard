@@ -57,6 +57,35 @@
 
 .logout-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); text-decoration: none; }
 
+/* Week indicator pills */
+.week-indicator {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.week-pill {
+  width: 32px; height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s;
+}
+
+.week-pill.completed { background: var(--gold); }
+.week-pill.current { background: var(--gold-light); box-shadow: 0 0 8px rgba(228,204,122,0.4); }
+
+.week-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.15);
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: 8px;
+  letter-spacing: 0.06em;
+}
+
 .progress-hero {
   max-width: 680px;
   margin: -20px auto 0;
@@ -106,6 +135,55 @@
 .progress-info h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
 .progress-info p { font-size: 0.82rem; color: var(--ink-soft); font-weight: 300; line-height: 1.5; }
 
+/* Overall progress bar */
+.overall-progress {
+  max-width: 680px;
+  margin: 16px auto 0;
+  padding: 0 20px;
+}
+
+.overall-bar-container {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+.overall-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.overall-bar-label span:first-child {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.overall-bar-label span:last-child {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--royal);
+}
+
+.overall-bar {
+  height: 8px;
+  background: var(--cream-dark);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.overall-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--royal-light) 100%);
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
 .days-section {
   max-width: 680px;
   margin: 28px auto 40px;
@@ -116,6 +194,34 @@
   font-size: 0.7rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.14em;
   color: var(--ink-soft); margin-bottom: 16px;
+}
+
+.streak-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gold-dim);
+}
+
+.streak-icon {
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+.streak-text {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+.streak-text strong {
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .days-grid { display: flex; flex-direction: column; gap: 12px; }
@@ -156,6 +262,8 @@
 .day-card:hover::before { background: var(--gold); }
 .day-card.completed::before { background: var(--success); }
 .day-card.locked { opacity: 0.5; cursor: default; pointer-events: none; }
+.day-card.time-locked { opacity: 0.7; cursor: default; pointer-events: none; }
+.day-card.time-locked::before { background: var(--gold-dim); }
 
 .day-number {
   width: 44px; height: 44px;
@@ -173,6 +281,13 @@
 .day-label { font-size: 0.95rem; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
 .day-theme { font-size: 0.8rem; color: var(--ink-soft); font-weight: 300; }
 
+.day-unlock-info {
+  font-size: 0.7rem;
+  color: var(--gold);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
 .day-status {
   font-size: 0.7rem; font-weight: 500; text-transform: uppercase;
   letter-spacing: 0.08em; padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
@@ -181,6 +296,7 @@
 .day-status.todo { background: var(--cream); color: var(--ink-soft); }
 .day-status.done { background: var(--success-light); color: var(--success); }
 .day-status.current { background: var(--gold-dim); color: var(--gold); }
+.day-status.time-wait { background: #FFF3E0; color: #E65100; }
 
 .day-arrow {
   color: var(--ink-soft); opacity: 0.3; transition: all 0.35s; flex-shrink: 0;
@@ -188,9 +304,39 @@
 
 .day-card:hover .day-arrow { opacity: 0.8; transform: translateX(3px); }
 
+/* Program complete banner */
+.program-complete-banner {
+  max-width: 680px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.program-complete-card {
+  background: linear-gradient(135deg, var(--royal) 0%, var(--royal-mid) 100%);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: var(--shadow-glow);
+}
+
+.program-complete-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.program-complete-card p {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.6);
+  font-weight: 300;
+}
+
 @media (max-width: 480px) {
   .progress-card { flex-direction: column; text-align: center; padding: 24px 20px; }
   .day-card { padding: 16px; gap: 12px; }
+  .week-indicator { justify-content: center; }
 }
 {% endblock %}
 
@@ -200,7 +346,17 @@
     <a href="{{ url_for('logout') }}" class="logout-btn">Sign Out</a>
     <div class="dash-header-inner">
       <h2 class="dash-greeting serif">Peace be with you, <strong>{{ user.first_name }}</strong></h2>
-      <p class="dash-tagline">7-Day Spiritual Growth Workbook — Growing into Maturity &amp; Dominion</p>
+      <p class="dash-tagline">4-Week Spiritual Growth Journey — Growing into Maturity &amp; Dominion</p>
+      <div class="week-indicator">
+        {% for w in range(1, total_weeks + 1) %}
+        <div class="week-pill {{ 'completed' if w < current_week else ('current' if w == current_week and not program_complete else ('completed' if program_complete else '')) }}"></div>
+        {% endfor %}
+        {% if not program_complete %}
+        <span class="week-badge">Week {{ current_week }}: {{ week_label }}</span>
+        {% else %}
+        <span class="week-badge">Journey Complete</span>
+        {% endif %}
+      </div>
     </div>
   </div>
 
@@ -209,44 +365,78 @@
       <div class="progress-ring-container">
         <svg class="progress-ring" width="88" height="88">
           <circle class="progress-ring-bg" cx="44" cy="44" r="39"/>
-          <circle class="progress-ring-fill" id="mainProgressRing" cx="44" cy="44" r="39" data-pct="{{ pct }}"/>
+          <circle class="progress-ring-fill" id="mainProgressRing" cx="44" cy="44" r="39" data-pct="{{ week_pct }}"/>
         </svg>
-        <div class="progress-percent"><span id="progressNumber">{{ pct }}</span><span>%</span></div>
+        <div class="progress-percent"><span id="progressNumber">{{ week_pct }}</span><span>%</span></div>
       </div>
       <div class="progress-info">
-        {% if completed_count == 0 %}
-        <h3>Your Journey Awaits</h3>
-        <p>Begin Day 1 to start growing in faith, dominion, and purpose.</p>
+        {% if program_complete %}
+        <h3>Program Complete!</h3>
+        <p>You have completed all 4 weeks of the Spiritual Growth Journey. Walk in dominion!</p>
+        {% elif completed_count == 0 %}
+        <h3>Week {{ current_week }}: {{ week_label }}</h3>
+        <p>Begin Day 1 to start this week's 7-day streak of growth.</p>
         {% elif completed_count < 7 %}
-        <h3>{{ completed_count }} of 7 Days Complete</h3>
-        <p>You're making great progress. Keep pressing in — Day {{ completed_count + 1 }} is ready for you.</p>
+        <h3>{{ completed_count }} of 7 Days — Week {{ current_week }}</h3>
+        <p>Keep your streak going! Day {{ completed_count + 1 }} awaits. Complete all 7 days this week.</p>
         {% elif not assessment_done %}
-        <h3>All 7 Days Complete!</h3>
-        <p>Complete your final assessment to finish the journey.</p>
-        {% else %}
-        <h3>Journey Complete!</h3>
-        <p>You have completed the 7-Day Spiritual Growth Workbook. Walk in dominion!</p>
+        <h3>Week {{ current_week }} — All 7 Days Done!</h3>
+        <p>Complete your weekly assessment to finish Week {{ current_week }} and advance.</p>
         {% endif %}
       </div>
     </div>
   </div>
 
+  <!-- Overall 4-week progress -->
+  <div class="overall-progress">
+    <div class="overall-bar-container">
+      <div class="overall-bar-label">
+        <span>Overall Journey</span>
+        <span>{{ total_completed }} of {{ 7 * total_weeks }} days</span>
+      </div>
+      <div class="overall-bar">
+        <div class="overall-bar-fill" style="width: {{ overall_pct }}%"></div>
+      </div>
+    </div>
+  </div>
+
+  {% if program_complete %}
+  <div class="program-complete-banner">
+    <div class="program-complete-card">
+      <h3 class="serif">Congratulations, {{ user.first_name }}!</h3>
+      <p>You have faithfully completed the 4-week spiritual growth program. You are now walking in maturity and dominion. Continue to live out these principles daily.</p>
+    </div>
+  </div>
+  {% else %}
   <div class="days-section">
-    <div class="days-section-title">Your 7-Day Journey</div>
+    <div class="days-section-title">Week {{ current_week }}: Your 7-Day Streak</div>
+
+    <div class="streak-info">
+      <svg class="streak-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2C7 6 4 8 4 12a6 6 0 0012 0c0-4-3-6-6-10z" fill="var(--gold)"/>
+      </svg>
+      <div class="streak-text">
+        <strong>7-day streak, 4 weeks.</strong> Complete one day at a time — each day unlocks the next morning. Build the habit through consistent repetition.
+      </div>
+    </div>
+
     <div class="days-grid">
-      {% set prev_completed = true %}
+      {% set ns = namespace(prev_completed=true) %}
       {% for day in days_data %}
         {% set dp = progress.get(day.day) %}
         {% set is_completed = dp and dp.is_completed %}
-        {% set is_unlocked = prev_completed %}
-        {% set is_current = is_unlocked and not is_completed %}
+        {% set is_sequentially_unlocked = ns.prev_completed %}
+        {% set lock_info = day_locks.get(day.day, {}) %}
+        {% set is_time_locked = lock_info.get('locked', false) and is_sequentially_unlocked and not is_completed %}
+        {% set is_unlocked = is_sequentially_unlocked and not is_time_locked and not is_completed %}
+        {% set is_current = is_unlocked %}
 
-        {% if is_unlocked and not (day.day == 1 and not prev_completed) %}
+        {% if is_current or is_completed %}
         <a href="{{ url_for('day_flow', n=day.day) }}"
         {% else %}
         <div
         {% endif %}
-           class="day-card{{ ' completed' if is_completed else '' }}{{ ' locked' if not is_unlocked else '' }}{{ ' active-day' if is_current else '' }}">
+           class="day-card{{ ' completed' if is_completed else '' }}{{ ' locked' if not is_sequentially_unlocked and not is_completed else '' }}{{ ' time-locked' if is_time_locked else '' }}{{ ' active-day' if is_current else '' }}">
           <div class="day-number">
             {% if is_completed %}
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -257,25 +447,30 @@
           <div class="day-content">
             <div class="day-label">Day {{ day.day }}: {{ day.title }}</div>
             <div class="day-theme">{{ day.insight }}</div>
+            {% if is_time_locked and lock_info.get('unlock_date') %}
+            <div class="day-unlock-info">Unlocks tomorrow</div>
+            {% endif %}
           </div>
           {% if is_completed %}
             <span class="day-status done">Complete</span>
           {% elif is_current %}
             <span class="day-status current">Start</span>
+          {% elif is_time_locked %}
+            <span class="day-status time-wait">Tomorrow</span>
           {% else %}
             <span class="day-status todo">Locked</span>
           {% endif %}
           <svg class="day-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        {% if is_unlocked %}
+        {% if is_current or is_completed %}
         </a>
         {% else %}
         </div>
         {% endif %}
 
         {% if is_completed %}
-          {% set prev_completed = true %}
+          {% set ns.prev_completed = true %}
         {% else %}
-          {% set prev_completed = false %}
+          {% set ns.prev_completed = false %}
         {% endif %}
       {% endfor %}
 
@@ -289,8 +484,8 @@
           {% endif %}
         </div>
         <div class="day-content">
-          <div class="day-label">Final Assessment</div>
-          <div class="day-theme">Reflect on your 7-day journey of growth</div>
+          <div class="day-label">Weekly Assessment</div>
+          <div class="day-theme">Reflect on your Week {{ current_week }} journey of growth</div>
         </div>
         <span class="day-status {{ 'done' if assessment_done else 'current' }}">{{ 'Complete' if assessment_done else 'Begin' }}</span>
         <svg class="day-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -298,6 +493,7 @@
       {% endif %}
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}
 

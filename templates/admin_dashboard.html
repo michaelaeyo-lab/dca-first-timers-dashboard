@@ -24,9 +24,50 @@
   </div>
   <div class="stat-card">
     <div class="stat-card-label">Avg. Days Completed</div>
-    <div class="stat-card-value">{{ avg_days }} <span>/ 7</span></div>
+    <div class="stat-card-value">{{ avg_days }} <span>/ {{ total_weeks * 7 }}</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Fully Completed</div>
+    <div class="stat-card-value">{{ completed_users }}</div>
   </div>
 </div>
+
+<!-- Week distribution -->
+{% if week_stats %}
+<div class="table-card" style="margin-bottom:20px">
+  <div class="table-header">
+    <h3>Week Distribution</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Users</th>
+        <th>Distribution</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ws in week_stats %}
+      <tr>
+        <td>
+          <strong>Week {{ ws.week }}</strong>
+          <br><span style="font-size:0.78rem;color:var(--ink-soft)">{{ ws.label }}</span>
+        </td>
+        <td>
+          <strong>{{ ws.count }}</strong>
+          <span style="font-size:0.78rem;color:var(--ink-soft)"> user{{ 's' if ws.count != 1 else '' }}</span>
+        </td>
+        <td>
+          <div class="progress-mini">
+            <div class="progress-mini-fill" style="width: {{ (ws.count / total_users * 100) if total_users > 0 else 0 }}%"></div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
 <!-- Day-by-day breakdown -->
 <div class="table-card">
